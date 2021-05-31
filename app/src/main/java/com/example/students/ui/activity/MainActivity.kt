@@ -11,7 +11,7 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.students.R
-import com.example.students.data.Constants
+import com.example.students.adapter.StudentAdapter
 import com.example.students.data.StudentsDAO
 import com.example.students.model.Student
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -19,7 +19,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 class MainActivity : AppCompatActivity() {
     private lateinit var studentsList: ListView
     private val studentsDAO = StudentsDAO()
-    private lateinit var studentsAdapter: ArrayAdapter<Student>
+    private lateinit var studentsAdapter: StudentAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,11 +109,10 @@ class MainActivity : AppCompatActivity() {
 
     /** Set studentsList adapter */
     private fun setStudentsListViewAdapter() {
-        val studentsListArrayAdapter =
-            ArrayAdapter<Student>(this, android.R.layout.simple_list_item_1)
+        val studentsListAdapter = StudentAdapter(this)
 
-        studentsAdapter = studentsListArrayAdapter //Store adapter on class
-        studentsList.adapter = studentsAdapter     //Update view adapter
+        studentsAdapter = studentsListAdapter       //Store adapter on class
+        studentsList.adapter = studentsAdapter      //Update view adapter
     }
 
     /** Get studentListView reference */
