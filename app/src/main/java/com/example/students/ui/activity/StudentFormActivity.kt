@@ -30,11 +30,16 @@ class StudentFormActivity : AppCompatActivity() {
         confirmButton = findViewById(R.id.button_confirm_action)
 
         //Get student from extra
-        if (intent.hasExtra("studentInfo")) {
+        student = if (intent.hasExtra("studentInfo")) {
             //Extra exists
             val extraStudent = intent.getSerializableExtra("studentInfo")
-            student = extraStudent as Student
+            extraStudent as Student
+        } else {
+            //Extra no exists
+            Student("", "", "")
         }
+
+        confirmButton.text = if (intent.hasExtra("studentInfo")) "Editar" else "Adicionar"
 
         //Set button properties
         confirmButton.setOnClickListener {
