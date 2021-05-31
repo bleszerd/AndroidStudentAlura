@@ -28,7 +28,7 @@ class StudentsDAO {
     }
 
     fun remove(student: Student) {
-
+        studentsList.remove(student)
     }
 
     fun all(): MutableList<Student> {

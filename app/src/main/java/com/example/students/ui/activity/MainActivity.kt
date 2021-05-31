@@ -1,41 +1,81 @@
 package com.example.students.ui.activity
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.ContextMenu
+import android.view.MenuItem
+import android.view.View
+import com.example.students.data.Constants.Companion.STUDENT_EXTRA_KEY
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ListView
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.students.R
+import com.example.students.data.Constants
 import com.example.students.data.StudentsDAO
 import com.example.students.model.Student
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
-    lateinit var studentsList: ListView
+    private lateinit var studentsList: ListView
     private val studentsDAO = StudentsDAO()
+    private lateinit var studentsAdapter: ArrayAdapter<Student>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //Find views references
-        studentsList = findViewById(R.id.listview_students)
+        getStudentListViewReference()
 
-        //Set per item OnClickListener
-        studentsList.setOnItemClickListener { parent, view, position, id ->
-            val goToStudentFormIntentEdit = Intent(this, StudentFormActivity::class.java)
-            val selectedStudent = studentsDAO.getByPosition(position)
-            goToStudentFormIntentEdit.putExtra("studentInfo", selectedStudent)
-            startActivity(goToStudentFormIntentEdit)
+        setStudentsListViewAdapter()
+
+        setOnItemClickListener()
+
+        _TEST_addStudents()
+
+        setFabOnClickListener()
+
+        registerForContextMenu(studentsList)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        updateStudentsUiData()
+    }
+
+    override fun onCreateContextMenu(
+        menu: ContextMenu?,
+        v: View?,
+        menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        menuInflater.inflate(R.menu.acitivity_main_menu, menu)  //Attach XLM menu to context menu
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        // Handle context menu item click
+        val menuInfo = item.menuInfo as AdapterView.AdapterContextMenuInfo?
+
+
+        when (item.itemId) {
+            R.id.contextMenu_item_remove_student -> {
+                val selectedStudent = studentsAdapter.getItem(menuInfo?.position!!)
+                removeStudent(selectedStudent!!)
+            }
         }
 
-        //Set 3 students
-        studentsDAO.add(Student("Diego", "email@examplo.com", "16998877854"))
-        studentsDAO.add(Student("Mario", "email@examplo.com", "16998877854"))
-        studentsDAO.add(Student("Fernanda", "email@examplo.com", "16998877854"))
+        return super.onContextItemSelected(item)
+    }
 
-        //Set fab OnClickListener
+    /** Clear list and get students list from DAO */
+    private fun updateStudentsUiData() {
+        studentsAdapter.clear()
+        studentsAdapter.addAll(studentsDAO.all())
+    }
+
+    /** Set fab onClick and intent for navigation */
+    private fun setFabOnClickListener() {
         val fabAddStudent: FloatingActionButton = findViewById(R.id.fab_add_student)
         fabAddStudent.setOnClickListener {
             //Define intent
@@ -44,12 +84,40 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    /** [TEST_ONLY] Add 3 students */
+    private fun _TEST_addStudents() {
+        studentsDAO.add(Student("Diego", "email@examplo.com", "16998877854"))
+        studentsDAO.add(Student("Mario", "email@examplo.com", "16998877854"))
+        studentsDAO.add(Student("Fernanda", "email@examplo.com", "16998877854"))
+    }
 
-        //Set array adapter
+    /** Remove student and update UI */
+    private fun removeStudent(selectedStudent: Student) {
+        studentsDAO.remove(selectedStudent)
+        studentsAdapter.remove(selectedStudent)
+    }
+
+    /** Set item click to edit */
+    private fun setOnItemClickListener() {
+        studentsList.setOnItemClickListener { _, _, position, _ -> //parent, view, position, id
+            val goToStudentFormIntentEdit = Intent(this, StudentFormActivity::class.java)
+            val selectedStudent = studentsDAO.getByPosition(position)
+            goToStudentFormIntentEdit.putExtra(STUDENT_EXTRA_KEY, selectedStudent)
+            startActivity(goToStudentFormIntentEdit)
+        }
+    }
+
+    /** Set studentsList adapter */
+    private fun setStudentsListViewAdapter() {
         val studentsListArrayAdapter =
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, studentsDAO.all())
-        studentsList.adapter = studentsListArrayAdapter
+            ArrayAdapter<Student>(this, android.R.layout.simple_list_item_1)
+
+        studentsAdapter = studentsListArrayAdapter //Store adapter on class
+        studentsList.adapter = studentsAdapter     //Update view adapter
+    }
+
+    /** Get studentListView reference */
+    private fun getStudentListViewReference() {
+        studentsList = findViewById(R.id.listview_students)
     }
 }
